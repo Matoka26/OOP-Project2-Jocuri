@@ -1,6 +1,6 @@
 #include <iostream>
 #include <windows.h>
-//#include <stdlib.h>
+#include <strings.h>
 #include <ctime>
 #include <iomanip>
 using namespace std;
@@ -143,9 +143,12 @@ public:
     JocTabla();
 
     void setDimGrid(int dimGrid){this->dimGrid = dimGrid;}
+    char** getTabla()const{return this->tabla;}
     void rescaleTabla();
-    void afisareTabla();
-    void puneX();
+    void afisareTabla(const Jucator& j1,const Jucator& j2);
+    void puneO();
+    void puneX(char chr1,char chr2,char cifra);
+    JocTabla& operator--(){incercari = incercari-1 ; return *this;}
     ~JocTabla();
 };
 
@@ -166,14 +169,41 @@ JocTabla::JocTabla():Joc(){
     }
     this->tabla[this->dimGrid+1][this->dimGrid+1] = char(3);
 }
-void JocTabla::afisareTabla(){
+void JocTabla::afisareTabla(const Jucator& j1,const Jucator& j2){
+    HANDLE  hConsole;
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     for(int i = 0 ; i < this->dimGrid+2 ; i++){
-        for(int j = 0 ; j < this->dimGrid+2 ; j++)
-            cout<<tabla[i][j]<<" ";
+        for(int j = 0 ; j < this->dimGrid+2 ; j++){
+            if(tabla[i][j] == 'O')
+                cout<<" "<<" ";
+            if(tabla[i][j] == '1'){
+                if(i != this->dimGrid+1){
+                    SetConsoleTextAttribute(hConsole , j1.getCuloare());
+                    cout<<'X'<<" ";
+                    SetConsoleTextAttribute(hConsole , 7);
+                }
+                else
+                    cout<<tabla[i][j]<<" ";
+
+            }
+            if(tabla[i][j] == '2'){
+                if(i != this->dimGrid+1){
+                    SetConsoleTextAttribute(hConsole , j2.getCuloare());
+                    cout<<'X'<<" ";
+                    SetConsoleTextAttribute(hConsole , 7);
+                }
+                else
+                    cout<<tabla[i][j]<<" ";
+
+            }
+            if(strchr("O12",tabla[i][j]) == NULL)
+                cout<<tabla[i][j]<<" ";
+        }
         cout<<endl;
     }
     cout<<endl;
 }
+
 
 void JocTabla::rescaleTabla(){
     if(this->tabla != NULL){
@@ -202,13 +232,16 @@ void JocTabla::rescaleTabla(){
     this->tabla[this->dimGrid+1][this->dimGrid+1] = char(3);
 }
 
-void JocTabla::puneX(){
+void JocTabla::puneO(){
     for(int i = 0 ; i < this->dimGrid ; i++)
         for(int j = 0 ; j < this->dimGrid ; j++)
             if(rand()%2)
                 this->tabla[i][j] = 'O';
 
+}
 
+void JocTabla::puneX(char chr1,char chr2,char cifra){
+    this->tabla[int(chr1)-97][int(chr2)-48] = cifra;
 }
 
 JocTabla::~JocTabla(){
@@ -234,6 +267,7 @@ public:
     void start();
     void alegeJoc();
     void jocBarbut();
+    void jocTinta();
 };
 
 Meniu::Meniu(){
@@ -247,7 +281,7 @@ void Meniu::start(){
     cout<<setw(63)<<"Player2"<<endl<<endl;
     cin>>jucator2;
     system("cls");
-    cout<<jucator1<<jucator2;
+    cout<<jucator1<<endl<<jucator2<<endl;
     system("pause");
     alegeJoc();
 
@@ -256,18 +290,19 @@ void Meniu::alegeJoc(){
     system("CLS");
     int k;
     cout<<setw(63)<<"Alegeti joc"<<endl<<endl;
-    cout<<"1.Barbut"<<endl;
-    cout<<"2.Ceva joc cu tinte idk - nu e gata"<<endl;
+    cout<<"1."<<this->barbut.getNumeJoc()<<endl;
+    cout<<"2."<<this->tinta.getNumeJoc()<<endl;
     cout<<"3.Ceva cu cursa idk -nu e gata"<<endl<<endl;
     cin>>k;
     switch(k){
         case(1):{
                 jocBarbut();
-            break;
-        }
+                break;
+            }
         case(2):{
-            break;
-        }
+                jocTinta();
+                break;
+            }
         case(3):{
             break;
         }
@@ -275,7 +310,6 @@ void Meniu::alegeJoc(){
 
 }
 void Meniu::hr(){
-    system("CLS");
     HANDLE  hConsole;
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     cout<<"########################################################################################################################"<<endl;
@@ -293,6 +327,9 @@ void Meniu::jocBarbut(){
     system("cls");
     this->jucator1.setScor(0);
     this->jucator2.setScor(0);
+    cout<<"De cat sa fie zarul?"<<endl;
+    cin>>k;
+    this->barbut.setNrMaximZar(k);
     cout<<"Cate incercari sa aveti?"<<endl;
     cin>>k;
     Joc::setIncercari(k);
@@ -324,14 +361,16 @@ void Meniu::jocBarbut(){
         if(puncte2 > puncte1) ++jucator2;
         if(puncte1 > puncte2) ++jucator1;
         system("pause");
+        system("cls");
+        cout<<setw(58)<<"~~~"<<this->barbut.getNumeJoc()<<"~~~"<<endl<<endl;
         hr();
-        --barbut;
+        --this->barbut;
     }
     cout<<"Runda incheiata"<<endl<<endl;
     if(ok == 1){
-        if(puncte1 > puncte2) cout<<this->jucator1.getNumeJucator()<<" a castigat runda"<<endl;
-        if(puncte2 > puncte1) cout<<this->jucator2.getNumeJucator()<<" a castigat runda"<<endl;
-        if(puncte2 == puncte1) cout<<"Remiza"<<endl;
+        if(this->jucator1.getScor() > this->jucator2.getScor()) cout<<this->jucator1.getNumeJucator()<<" a castigat runda"<<endl;
+        if(this->jucator2.getScor() > this->jucator1.getScor()) cout<<this->jucator2.getNumeJucator()<<" a castigat runda"<<endl;
+        if(this->jucator2.getScor() == this->jucator1.getScor()) cout<<"Remiza"<<endl;
     }
     system("pause");
     system("cls");
@@ -344,6 +383,80 @@ void Meniu::jocBarbut(){
     if(ok == 3) return;
 
 }
+void Meniu::jocTinta(){
+    int k;
+    system("cls");
+    this->jucator1.setScor(0);
+    this->jucator2.setScor(0);
+    cout<<"Cate casute are latura tablei?"<<endl;
+    cin>>k;
+    tinta.setDimGrid(k);
+    tinta.rescaleTabla();
+    this->tinta.puneO();
+    cout<<"Cate incercari sa aveti?"<<endl;
+    cin>>k;
+    Joc::setIncercari(k);
+    int ok = 0;
+    char coordX,coordY;
+    system("CLS");
+    cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~"<<endl<<endl;
+    hr();
+    this->tinta.afisareTabla(this->jucator1,this->jucator2);
+    while(Joc::getIncercari() > 0){
+        cout<<"Randul lui "<<(this->jucator1).getNumeJucator()<<endl;
+        cout<<"   1.Alege un loc"<<endl;
+        cout<<"   2.Renunta"<<endl;
+        cin>>ok;
+        if(ok == 2) break;
+        if(ok == 1){
+            cout<<"Ce coordonate?(format:litera cifra)"<<endl;
+            cin>>coordX>>coordY;
+            if(this->tinta.getTabla()[int(coordX)-97][int(coordY)-48] == 'O')
+                ++jucator1;
+            this->tinta.puneX(coordX,coordY,'1');
+        }
+
+        system("CLS");
+        cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~"<<endl<<endl;
+        hr();
+        this->tinta.afisareTabla(this->jucator1,this->jucator2);
+        cout<<"Randul lui "<<(this->jucator2).getNumeJucator()<<endl;
+        cout<<"   1.Alege un loc"<<endl;
+        cout<<"   2.Renunta"<<endl;
+        cin>>ok;
+        if(ok == 2) break;
+        if(ok == 1){
+            cout<<"Ce coordonate?(format:litera cifra)"<<endl;
+            cin>>coordX>>coordY;
+            if((this->tinta).getTabla()[int(coordX)-97][int(coordY)-48] == 'O')
+                ++jucator2;
+            this->tinta.puneX(coordX,coordY,'2');
+        }
+        system("CLS");
+        cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~"<<endl<<endl;
+        hr();
+        this->tinta.afisareTabla(this->jucator1,this->jucator2);
+        --this->tinta;
+    }
+
+
+    cout<<"Runda incheiata"<<endl<<endl;
+    if(ok == 1){
+        if(this->jucator1.getScor() > this->jucator2.getScor()) cout<<this->jucator1.getNumeJucator()<<" a castigat runda"<<endl;
+        if(this->jucator1.getScor() < this->jucator2.getScor()) cout<<this->jucator2.getNumeJucator()<<" a castigat runda"<<endl;
+        if(this->jucator1.getScor() == this->jucator2.getScor()) cout<<"Remiza"<<endl;
+    }
+    system("pause");
+    system("cls");
+    cout<<"1.Play again"<<endl;
+    cout<<"2.Inapoi la jocuri"<<endl;
+    cout<<"3.Out"<<endl;
+    cin>>ok;
+    if(ok == 1) jocTinta();
+    if(ok == 2) alegeJoc();
+    if(ok == 3) return;
+}
+
 int main()
 {srand((unsigned)time(NULL));
 Meniu meniu;
