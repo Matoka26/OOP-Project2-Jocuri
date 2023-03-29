@@ -148,7 +148,6 @@ public:
     void afisareTabla(const Jucator& j1,const Jucator& j2);
     void puneO();
     void puneX(char chr1,char chr2,char cifra);
-    JocTabla& operator--(){incercari = incercari-1 ; return *this;}
     ~JocTabla();
 };
 
