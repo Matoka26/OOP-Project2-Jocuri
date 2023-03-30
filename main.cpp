@@ -267,6 +267,8 @@ public:
     void alegeJoc();
     void jocBarbut();
     void jocTinta();
+    void instrBarbut();
+    void instrTinta();
 };
 
 Meniu::Meniu(){
@@ -312,24 +314,29 @@ void Meniu::hr(){
     HANDLE  hConsole;
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     cout<<"########################################################################################################################"<<endl;
-    SetConsoleTextAttribute(hConsole, this->jucator1.getCuloare());
-    cout<<setw(30)<<this->jucator1.getNumeJucator();
-    SetConsoleTextAttribute(hConsole, this->jucator2.getCuloare());
-    cout<<setw(60)<<this->jucator2.getNumeJucator()<<endl;
-    SetConsoleTextAttribute(hConsole, 7);
+    cout<<setw(30)<<"";
+        SetConsoleTextAttribute(hConsole, this->jucator1.getCuloare());
+    cout<<this->jucator1.getNumeJucator();
+        SetConsoleTextAttribute(hConsole,7);
+    cout<<setw(60)<<"";
+        SetConsoleTextAttribute(hConsole, this->jucator1.getCuloare());
+    cout<<this->jucator2.getNumeJucator()<<endl;
+        SetConsoleTextAttribute(hConsole, 7);
     cout<<setw(30)<<this->jucator1.getScor()<<setw(60)<<this->jucator2.getScor()<<endl;
-    cout<<"________________________________________________________________________________________________________________________"<<endl<<endl;
+    cout<<"Runde ramase: ";for(int i = 0 ; i < barbut.getIncercari() ; i ++) cout<<"|";
+    cout<<endl<<"________________________________________________________________________________________________________________________"<<endl<<endl;
 
 }
 void Meniu::jocBarbut(){
     int k;
+    instrBarbut();
     system("cls");
     this->jucator1.setScor(0);
     this->jucator2.setScor(0);
-    cout<<"De cat sa fie zarul?"<<endl;
+    cout<<"Cate fete are zarul?"<<endl;
     cin>>k;
     this->barbut.setNrMaximZar(k);
-    cout<<"Cate incercari sa aveti?"<<endl;
+    cout<<"Cate ture sa aveti?"<<endl;
     cin>>k;
     Joc::setIncercari(k);
     system("CLS");
@@ -361,11 +368,11 @@ void Meniu::jocBarbut(){
         if(puncte1 > puncte2) ++jucator1;
         system("pause");
         system("cls");
+        --this->barbut;
         cout<<setw(58)<<"~~~"<<this->barbut.getNumeJoc()<<"~~~"<<endl<<endl;
         hr();
-        --this->barbut;
     }
-    cout<<"Runda incheiata"<<endl<<endl;
+    cout<<"Meci incheiata"<<endl<<endl;
     if(ok == 1){
         if(this->jucator1.getScor() > this->jucator2.getScor()) cout<<this->jucator1.getNumeJucator()<<" a castigat runda"<<endl;
         if(this->jucator2.getScor() > this->jucator1.getScor()) cout<<this->jucator2.getNumeJucator()<<" a castigat runda"<<endl;
@@ -384,6 +391,7 @@ void Meniu::jocBarbut(){
 }
 void Meniu::jocTinta(){
     int k;
+    instrTinta();
     system("cls");
     this->jucator1.setScor(0);
     this->jucator2.setScor(0);
@@ -392,7 +400,7 @@ void Meniu::jocTinta(){
     tinta.setDimGrid(k);
     tinta.rescaleTabla();
     this->tinta.puneO();
-    cout<<"Cate incercari sa aveti?"<<endl;
+    cout<<"Cate ture sa aveti?"<<endl;
     cin>>k;
     Joc::setIncercari(k);
     int ok = 0;
@@ -433,13 +441,11 @@ void Meniu::jocTinta(){
         }
         system("CLS");
         cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~"<<endl<<endl;
+        --this->tinta;
         hr();
         this->tinta.afisareTabla(this->jucator1,this->jucator2);
-        --this->tinta;
     }
-
-
-    cout<<"Runda incheiata"<<endl<<endl;
+    cout<<"Meci incheiata"<<endl<<endl;
     if(ok == 1){
         if(this->jucator1.getScor() > this->jucator2.getScor()) cout<<this->jucator1.getNumeJucator()<<" a castigat runda"<<endl;
         if(this->jucator1.getScor() < this->jucator2.getScor()) cout<<this->jucator2.getNumeJucator()<<" a castigat runda"<<endl;
@@ -454,6 +460,36 @@ void Meniu::jocTinta(){
     if(ok == 1) jocTinta();
     if(ok == 2) alegeJoc();
     if(ok == 3) return;
+}
+
+void Meniu::instrBarbut(){
+    system("cls");
+    cout<<"Instructiuni "<<this->barbut.getNumeJoc()<<endl<<endl;
+
+    cout<<"1 -> Jucatorul da cu zarul"<<endl
+        <<"2 -> Meciul se incheie"<<endl
+        <<endl
+        <<"Jucatorii dau pe rand cu zarul,cine da mai mult primeste 10p, daca e remiza nu primeste nimeni nimic"<<endl
+        <<"Prima data alegeti numarul de fete al zarului"<<endl
+        <<"Apoi alegeti cate runde sa jucati"<<endl
+        <<endl;
+
+    system("pause");
+}
+void Meniu::instrTinta(){
+    system("cls");
+    cout<<"Instructiuni "<<this->tinta.getNumeJoc()<<endl<<endl;
+
+    cout<<"1 -> Jucatorul alege daca joaca"<<endl
+        <<"        Alege coordonatele sub forma litera|_|cifra (ex: a 0 , b 2, ...)"<<endl
+        <<"2 -> Meciul se incheie"<<endl
+        <<endl
+        <<"In spatele grid-ului sunt ascunse niste tinte. Jucatorii incearca sa ghiceasca alternativ coordonatele tintelor,iar daca o fac primesc 10p"<<endl
+        <<"Prima data alegeti dimensiunea tablei de joc"<<endl
+        <<"Apoi alegeti cate incercari va avea fiecare sa ghiceasca"<<endl
+        <<endl;
+
+    system("pause");
 }
 
 int main()
