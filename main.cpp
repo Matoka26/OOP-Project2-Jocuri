@@ -62,7 +62,7 @@ public:
     Joc(){this->numeJoc = "Secret";};
     Joc(string numeJoc){this->numeJoc = numeJoc;}
     Joc(const Joc& obj){this->numeJoc = obj.numeJoc;}
-    Joc& operator=(const Joc& obj){if(this != &obj)this->numeJoc = obj.numeJoc;}
+    Joc& operator=(const Joc& obj){if(this != &obj)this->numeJoc = obj.numeJoc; return *this;}
     Joc& operator--(){incercari = incercari-1; return *this;}
     friend istream& operator>>(istream& in,Joc& obj){cout<<"Cum se numeste jocul?\n";in>>obj.numeJoc;return in;}
     friend ostream& operator<<(ostream& out,const Joc& obj){out<<"Nume joc: "<<obj.numeJoc<<endl;return out;}
@@ -76,7 +76,7 @@ int Joc::incercari = 5;
 
 
 class JocZaruri:public Joc{
-private:
+protected:
     int zar1,zar2;
     int nrMaximZar;
 public:
@@ -136,20 +136,96 @@ void JocZaruri::afisareZar(const Jucator& obj){
 
 }
 class JocTabla:public Joc{
-private:
+protected:
     int dimGrid;
     char** tabla;
 public:
     JocTabla();
-
-    void setDimGrid(int dimGrid){this->dimGrid = dimGrid;}
+    JocTabla(string numeJoc,int dimGrid, char** tabla);
+    JocTabla(const JocTabla& obj);
+    JocTabla& operator=(const JocTabla& obj);
     char** getTabla()const{return this->tabla;}
-    void rescaleTabla();
+    void rescaleTabla(int newDim);
     void afisareTabla(const Jucator& j1,const Jucator& j2);
     void puneO();
     void puneX(char chr1,char chr2,char cifra);
+    friend istream& operator>>(istream& in, JocTabla& obj);
+    friend ostream& operator<<(ostream& out , const JocTabla& obj);
     ~JocTabla();
 };
+
+JocTabla::JocTabla(string numeJoc,int dimGrid , char** tabla){
+    this->numeJoc = numeJoc;
+    if(this->tabla != NULL ){
+        for(int i = 0 ; i < this->dimGrid+2 ; i++)
+            if(this->tabla[i] != NULL){
+                delete[] this->tabla[i];
+                this->tabla[i] = NULL;
+            }
+        delete[] this->tabla;
+        this->tabla = NULL;
+    }
+
+    this->dimGrid = dimGrid;
+
+    this->tabla = new char*[dimGrid+2];
+    for(int i = 0 ; i < dimGrid+2 ; i++)
+        this->tabla[i] = new char[dimGrid+2];
+
+    for(int i = 0 ; i < dimGrid+2 ; i++)
+        for(int j = 0 ; j < dimGrid+2 ; j++)
+            this->tabla[i][j] = tabla[i][j];
+}
+
+JocTabla& JocTabla::operator=(const JocTabla& obj){
+    if(this != &obj){
+        Joc::operator=(obj);
+        if(this->tabla != NULL ){
+        for(int i = 0 ; i < this->dimGrid+2 ; i++)
+            if(this->tabla[i] != NULL){
+                delete[] this->tabla[i];
+                this->tabla[i] = NULL;
+            }
+            delete[] this->tabla;
+            this->tabla = NULL;
+        }
+
+        this->dimGrid = obj.dimGrid;
+
+        this->tabla = new char*[obj.dimGrid+2];
+        for(int i = 0 ; i < obj.dimGrid+2 ; i++)
+            this->tabla[i] = new char[obj.dimGrid+2];
+
+        for(int i = 0 ; i < obj.dimGrid+2 ; i++)
+            for(int j = 0 ; j < obj.dimGrid+2 ; j++)
+                this->tabla[i][j] = obj.tabla[i][j];
+
+
+    }
+    return *this;
+}
+
+JocTabla::JocTabla(const JocTabla& obj):Joc(obj){
+    if(this->tabla != NULL ){
+        for(int i = 0 ; i < this->dimGrid+2 ; i++)
+            if(this->tabla[i] != NULL){
+                delete[] this->tabla[i];
+                this->tabla[i] = NULL;
+            }
+        delete[] this->tabla;
+        this->tabla = NULL;
+    }
+
+    this->dimGrid = obj.dimGrid;
+
+    this->tabla = new char*[obj.dimGrid+2];
+    for(int i = 0 ; i < obj.dimGrid+2 ; i++)
+        this->tabla[i] = new char[obj.dimGrid+2];
+
+    for(int i = 0 ; i < obj.dimGrid+2 ; i++)
+        for(int j = 0 ; j < obj.dimGrid+2 ; j++)
+            this->tabla[i][j] = obj.tabla[i][j];
+}
 
 JocTabla::JocTabla():Joc(){
     this->dimGrid = 8;
@@ -162,19 +238,27 @@ JocTabla::JocTabla():Joc(){
             this->tabla[i][j] = ' ';
     for(int i = 0 ; i < this->dimGrid+2 ; i++){
         this->tabla[i][this->dimGrid+1] = char(97+i);
-        this->tabla[this->dimGrid][i] = '_';
-        this->tabla[i][this->dimGrid] = '|';
+        this->tabla[this->dimGrid][i] = char(196);
+        this->tabla[i][this->dimGrid] = char(179);
         this->tabla[this->dimGrid+1][i] = char(48+i);
     }
     this->tabla[this->dimGrid+1][this->dimGrid+1] = char(3);
 }
+
+
+
+
 void JocTabla::afisareTabla(const Jucator& j1,const Jucator& j2){
     HANDLE  hConsole;
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     for(int i = 0 ; i < this->dimGrid+2 ; i++){
         for(int j = 0 ; j < this->dimGrid+2 ; j++){
             if(tabla[i][j] == 'O')
-                cout<<" "<<" ";
+                if(i == this->dimGrid+1)
+                    cout<<'O'<<" ";
+                else
+                    cout<<" "<<" ";
+
             if(tabla[i][j] == '1'){
                 if(i != this->dimGrid+1){
                     SetConsoleTextAttribute(hConsole , j1.getCuloare());
@@ -204,7 +288,7 @@ void JocTabla::afisareTabla(const Jucator& j1,const Jucator& j2){
 }
 
 
-void JocTabla::rescaleTabla(){
+void JocTabla::rescaleTabla(int newDim){
     if(this->tabla != NULL){
         for(int i = 0 ; i < this->dimGrid+2 ; i++)
             if(this->tabla[i] != NULL){
@@ -215,20 +299,21 @@ void JocTabla::rescaleTabla(){
         this->tabla = NULL;
         }
 
-    this->tabla = new char*[this->dimGrid+2];
-    for(int i = 0 ; i < this->dimGrid+2 ; i++)
-        this->tabla[i] = new char[this->dimGrid+2];
+    this->tabla = new char*[newDim+2];
+    for(int i = 0 ; i < newDim+2 ; i++)
+        this->tabla[i] = new char[newDim+2];
 
-    for(int i = 0 ; i < this->dimGrid ; i++)
-        for(int j = 0 ; j < this->dimGrid ; j++)
+    for(int i = 0 ; i < newDim ; i++)
+        for(int j = 0 ; j < newDim ; j++)
             this->tabla[i][j] = ' ';
-    for(int i = 0 ; i < this->dimGrid+2 ; i++){
-        this->tabla[i][this->dimGrid+1] = char(97+i);
-        this->tabla[this->dimGrid][i] = '_';
-        this->tabla[i][this->dimGrid] = '|';
-        this->tabla[this->dimGrid+1][i] = char(48+i);
+    for(int i = 0 ; i < newDim+2 ; i++){
+        this->tabla[i][newDim+1] = char(97+i);
+        this->tabla[newDim][i] = char(196);
+        this->tabla[i][newDim] = char(179);
+        this->tabla[newDim+1][i] = char(48+i);
     }
-    this->tabla[this->dimGrid+1][this->dimGrid+1] = char(3);
+    this->tabla[newDim+1][newDim+1] = char(3);
+    this->dimGrid = newDim;
 }
 
 void JocTabla::puneO(){
@@ -243,6 +328,36 @@ void JocTabla::puneX(char chr1,char chr2,char cifra){
     this->tabla[int(chr1)-97][int(chr2)-48] = cifra;
 }
 
+istream& operator>>(istream& in , JocTabla& obj){
+        in>>(Joc&)obj;
+        cout<<"Ce dimensiune are ?"<<endl;
+        in>>obj.dimGrid;
+        for(int i = 0 ; i < obj.dimGrid ; i++)
+            for(int j = 0 ; j < obj.dimGrid ; j++){
+                cout<<"Elementul ["<<i<<"]["<<j<<"]: ";
+                in>>obj.tabla[i][j];
+            }
+        for(int i = 0 ; i < obj.dimGrid+2 ; i++){
+        obj.tabla[i][obj.dimGrid+1] = char(97+i);
+        obj.tabla[obj.dimGrid][i] = char(196);
+        obj.tabla[i][obj.dimGrid] = char(179);
+        obj.tabla[obj.dimGrid+1][i] = char(48+i);
+    }
+    obj.tabla[obj.dimGrid+1][obj.dimGrid+1] = char(3);
+        return in;
+}
+
+ostream& operator<<(ostream& out , const JocTabla& obj){
+    out<<(Joc&)obj;
+    out<<"Dimensiunea tablei: "<<obj.dimGrid<<endl;
+    out<<"Asa arata tabla"<<endl;
+    for(int i = 0 ; i < obj.dimGrid+2 ; i++){
+        for(int j = 0 ; j < obj.dimGrid+2 ; j++)
+            out<<obj.tabla[i][j]<<" ";
+        out<<endl;
+    }
+    return out;
+}
 JocTabla::~JocTabla(){
     if(this->tabla != NULL){
         for(int i = 0 ; i < this->dimGrid+2 ; i++)
@@ -253,9 +368,10 @@ JocTabla::~JocTabla(){
         delete[] this->tabla;
         this->tabla = NULL;
         }
+
 }
 
-class Meniu{ ///NUSH CE DRACU FAC AICI
+class Meniu{
 private:
     Jucator jucator1 , jucator2 ;
     JocZaruri barbut;
@@ -269,6 +385,11 @@ public:
     void jocTinta();
     void instrBarbut();
     void instrTinta();
+};
+
+class JocSmecher:public JocTabla,public JocZaruri{
+
+
 };
 
 Meniu::Meniu(){
@@ -305,6 +426,7 @@ void Meniu::alegeJoc(){
                 break;
             }
         case(3):{
+                ///ultimu joc
             break;
         }
     }
@@ -319,7 +441,7 @@ void Meniu::hr(){
     cout<<this->jucator1.getNumeJucator();
         SetConsoleTextAttribute(hConsole,7);
     cout<<setw(60)<<"";
-        SetConsoleTextAttribute(hConsole, this->jucator1.getCuloare());
+        SetConsoleTextAttribute(hConsole, this->jucator2.getCuloare());
     cout<<this->jucator2.getNumeJucator()<<endl;
         SetConsoleTextAttribute(hConsole, 7);
     cout<<setw(30)<<this->jucator1.getScor()<<setw(60)<<this->jucator2.getScor()<<endl;
@@ -397,8 +519,7 @@ void Meniu::jocTinta(){
     this->jucator2.setScor(0);
     cout<<"Cate casute are latura tablei?"<<endl;
     cin>>k;
-    tinta.setDimGrid(k);
-    tinta.rescaleTabla();
+    this->tinta.rescaleTabla(k);
     this->tinta.puneO();
     cout<<"Cate ture sa aveti?"<<endl;
     cin>>k;
@@ -419,7 +540,7 @@ void Meniu::jocTinta(){
             cout<<"Ce coordonate?(format:litera cifra)"<<endl;
             cin>>coordX>>coordY;
             if(this->tinta.getTabla()[int(coordX)-97][int(coordY)-48] == 'O')
-                ++jucator1;
+                ++this->jucator1;
             this->tinta.puneX(coordX,coordY,'1');
         }
 
@@ -436,7 +557,7 @@ void Meniu::jocTinta(){
             cout<<"Ce coordonate?(format:litera cifra)"<<endl;
             cin>>coordX>>coordY;
             if((this->tinta).getTabla()[int(coordX)-97][int(coordY)-48] == 'O')
-                ++jucator2;
+                ++this->jucator2;
             this->tinta.puneX(coordX,coordY,'2');
         }
         system("CLS");
@@ -498,3 +619,6 @@ Meniu meniu;
 meniu.start();
 
 }
+
+
+///todo: MAI FA O CLASA CU LISTA DE JOCURI!!!
