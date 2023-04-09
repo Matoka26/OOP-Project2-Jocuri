@@ -4,6 +4,15 @@
 #include <ctime>
 #include <iomanip>
 using namespace std;
+
+class IOinterface{
+public:
+    virtual istream& citire(istream&) = 0;
+    virtual ostream& afisare(ostream&) const = 0;
+
+};
+
+
 class Jucator{
 private:
     string numeJucator;
@@ -54,7 +63,7 @@ public:
 
 };
 
-class Joc{
+class Joc:public IOinterface{
 protected:
     static int incercari;
     string numeJoc;
@@ -64,12 +73,13 @@ public:
     Joc(const Joc& obj){this->numeJoc = obj.numeJoc;}
     Joc& operator=(const Joc& obj){if(this != &obj)this->numeJoc = obj.numeJoc; return *this;}
     Joc& operator--(){incercari = incercari-1; return *this;}
-    friend istream& operator>>(istream& in,Joc& obj){cout<<"Cum se numeste jocul?\n";in>>obj.numeJoc;return in;}
-    friend ostream& operator<<(ostream& out,const Joc& obj){out<<"Nume joc: "<<obj.numeJoc<<endl;return out;}
+    virtual istream& citire(istream& in){cout<<"Cum se numeste jocul?\n";in>>this->numeJoc;return in;}
+    virtual ostream& afisare(ostream& out)const{out<<"Nume joc: "<<this->numeJoc<<endl;out<<"Incercari: "<<this->incercari<<endl;return out;}
     static int getIncercari(){return incercari;} //const
     string getNumeJoc()const{return this->numeJoc;}
     static void setIncercari(int incercariNoi){incercari = incercariNoi;}
-
+    friend istream& operator>>(istream& in , Joc& obj){return obj.citire(in);}
+    friend ostream& operator<<(ostream& out , const Joc& obj){return obj.afisare(out);}
     void setNumeJoc(string numeJoc){this->numeJoc = numeJoc;}
 };
 int Joc::incercari = 5;
@@ -92,30 +102,29 @@ public:
         }
         return *this;
     }
-    friend istream& operator>>(istream& in,JocZaruri& obj){
-        in>>(Joc&)obj;
-        cout<<"Cat e pe primu zar? "; in>>obj.zar1;
-        cout<<"Cat e pe al2lea zar? "; in>>obj.zar2;
-        cout<<"De cat e zaru? "; in>>obj.nrMaximZar;
+    virtual istream& citire(istream& in){
+        Joc::citire(in);
+        cout<<"Cat e pe primu zar? "; in>>this->zar1;
+        cout<<"Cat e pe al2lea zar? "; in>>this->zar2;
+        cout<<"De cat e zaru? "; in>>this->nrMaximZar;
         return in;
     }
-    friend ostream& operator<<(ostream& out,const JocZaruri& obj){
-        out<<(Joc&)obj;
+    virtual ostream& operator<<(ostream& out)const{
+        Joc::afisare(out);
         out<<char(218)<<char(196)<<char(196)<<char(196)<<char(191)<<" "<<char(218)<<char(196)<<char(196)<<char(196)<<char(191)<<endl;
-        out<<"|";if(obj.zar1 < 10) cout<<" ";
-        out<<obj.zar1<<" |"<<" ";
-        out<<"|";if(obj.zar2 < 10) cout<<" ";
-        out<<obj.zar2<<" |"<<endl;;
+        out<<"|";if(this->zar1 < 10) cout<<" ";
+        out<<this->zar1<<" |"<<" ";
+        out<<"|";if(this->zar2 < 10) cout<<" ";
+        out<<this->zar2<<" |"<<endl;;
         out<<char(192)<<char(196)<<char(196)<<char(196)<<char(217)<<" "<<char(192)<<char(196)<<char(196)<<char(196)<<char(217)<<endl;
-
-        out<<"Maximu de pe zar e "<<obj.nrMaximZar<<endl;
+        out<<"Maximu de pe zar e "<<this->nrMaximZar<<endl;
         return out;
     }
 
     void setNrMaximZar(int nrNou){this->nrMaximZar = nrNou;}
-    int getSumaZaruri()const{return(this->zar1+this->zar2);}
+    virtual int getSumaZaruri()const{return(this->zar1+this->zar2);}
 
-    void daCuZaru();
+    virtual void daCuZaru();
     void afisareZar(const Jucator& obj);
 };
 void JocZaruri::daCuZaru(){
@@ -149,8 +158,35 @@ public:
     void afisareTabla(const Jucator& j1,const Jucator& j2);
     void puneO();
     void puneX(char chr1,char chr2,char cifra);
-    friend istream& operator>>(istream& in, JocTabla& obj);
-    friend ostream& operator<<(ostream& out , const JocTabla& obj);
+    virtual istream& citire(istream& in){
+        Joc::citire(in);
+        cout<<"Ce dimensiune are ?"<<endl;
+        in>>this->dimGrid;
+        for(int i = 0 ; i < this->dimGrid ; i++)
+            for(int j = 0 ; j < this->dimGrid ; j++){
+                cout<<"Elementul ["<<i<<"]["<<j<<"]: ";
+                in>>this->tabla[i][j];
+            }
+        for(int i = 0 ; i < this->dimGrid+2 ; i++){
+        this->tabla[i][this->dimGrid+1] = char(97+i);
+        this->tabla[this->dimGrid][i] = char(196);
+        this->tabla[i][this->dimGrid] = char(179);
+        this->tabla[this->dimGrid+1][i] = char(48+i);
+    }
+    this->tabla[this->dimGrid+1][this->dimGrid+1] = char(3);
+        return in;
+    }
+    virtual ostream& afisare(ostream& out)const{
+    Joc::afisare(out);
+    out<<"Dimensiunea tablei: "<<this->dimGrid<<endl;
+    out<<"Asa arata tabla"<<endl;
+    for(int i = 0 ; i < this->dimGrid+2 ; i++){
+        for(int j = 0 ; j < this->dimGrid+2 ; j++)
+            out<<this->tabla[i][j]<<" ";
+        out<<endl;
+    }
+    return out;
+    }
     ~JocTabla();
 };
 
@@ -328,36 +364,6 @@ void JocTabla::puneX(char chr1,char chr2,char cifra){
     this->tabla[int(chr1)-97][int(chr2)-48] = cifra;
 }
 
-istream& operator>>(istream& in , JocTabla& obj){
-        in>>(Joc&)obj;
-        cout<<"Ce dimensiune are ?"<<endl;
-        in>>obj.dimGrid;
-        for(int i = 0 ; i < obj.dimGrid ; i++)
-            for(int j = 0 ; j < obj.dimGrid ; j++){
-                cout<<"Elementul ["<<i<<"]["<<j<<"]: ";
-                in>>obj.tabla[i][j];
-            }
-        for(int i = 0 ; i < obj.dimGrid+2 ; i++){
-        obj.tabla[i][obj.dimGrid+1] = char(97+i);
-        obj.tabla[obj.dimGrid][i] = char(196);
-        obj.tabla[i][obj.dimGrid] = char(179);
-        obj.tabla[obj.dimGrid+1][i] = char(48+i);
-    }
-    obj.tabla[obj.dimGrid+1][obj.dimGrid+1] = char(3);
-        return in;
-}
-
-ostream& operator<<(ostream& out , const JocTabla& obj){
-    out<<(Joc&)obj;
-    out<<"Dimensiunea tablei: "<<obj.dimGrid<<endl;
-    out<<"Asa arata tabla"<<endl;
-    for(int i = 0 ; i < obj.dimGrid+2 ; i++){
-        for(int j = 0 ; j < obj.dimGrid+2 ; j++)
-            out<<obj.tabla[i][j]<<" ";
-        out<<endl;
-    }
-    return out;
-}
 JocTabla::~JocTabla(){
     if(this->tabla != NULL){
         for(int i = 0 ; i < this->dimGrid+2 ; i++)
@@ -387,10 +393,6 @@ public:
     void instrTinta();
 };
 
-class JocSmecher:public JocTabla,public JocZaruri{
-
-
-};
 
 Meniu::Meniu(){
     this->barbut.setNumeJoc("Barbut");
