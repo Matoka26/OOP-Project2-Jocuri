@@ -2,7 +2,9 @@
 #include <windows.h>
 #include <strings.h>
 #include <ctime>
+#include <conio.h>
 #include <iomanip>
+
 using namespace std;
 
 class IOinterface{
@@ -18,15 +20,42 @@ private:
     string numeJucator;
     int scor;
     int culoare;
+    char pion;
+    pair<char,char>pozitie;
 public:
-    Jucator(){this->numeJucator = "Guest";this->scor = 0;this->culoare = 7;}
-    Jucator(string numeJucator,int scor,int culoare){this->numeJucator = numeJucator ; this->scor = scor;this->culoare = culoare;}
-    Jucator(const Jucator& obj){this->numeJucator = obj.numeJucator; this->scor = obj.scor;}
-    Jucator& operator=(const Jucator& obj){this->numeJucator = obj.numeJucator; this->scor = obj.scor;this->culoare = obj.culoare; return *this;}
-
+    Jucator(){this->numeJucator = "Guest";this->scor = 0;this->culoare = 7;this->pion = '*';pozitie.first = ' ';pozitie.second = ' ';}
+    Jucator(string numeJucator,int scor,int culoare,char pion,pair<char,char>pozitie){
+        this->numeJucator = numeJucator ;
+        this->scor = scor;
+        this->culoare = culoare;
+        this->pion = pion;
+        this->pozitie.first = pozitie.first;
+        this->pozitie.second = pozitie.second;
+        }
+    Jucator(const Jucator& obj){
+        this->numeJucator = obj.numeJucator;
+        this->scor = obj.scor;
+        this->pion = obj.pion;
+        this->pozitie.first = obj.pozitie.first;
+        this->pozitie.second = obj.pozitie.second;
+        }
+    Jucator& operator=(const Jucator& obj){
+        this->numeJucator = obj.numeJucator;
+        this->scor = obj.scor;
+        this->culoare = obj.culoare;
+        this->pion = obj.pion;
+        this->pozitie.first = obj.pozitie.first;
+        this->pozitie.second = obj.pozitie.second;
+        return *this;
+        }
+    void setPozitie(char linie,char coloana){this->pozitie.first = linie;this->pozitie.second = coloana;}
+    pair<char,char> getPozitie()const{return pozitie;}
     void setScor(int scor){this->scor = scor;}
+    void setPion(char pion){this->pion = pion;}
+    char getPion()const{return this->pion;}
     int getScor()const{return this->scor;}
     int getCuloare()const{return this->culoare;}
+    void setCuloare(int culoare){this->culoare = culoare;}
     string getNumeJucator()const{return this->numeJucator;}
     Jucator& operator++(){this->scor = this->scor+10; return *this;}
     friend istream& operator>>(istream& in , Jucator& obj){
@@ -47,6 +76,7 @@ public:
         cout<<"   14.Galben"<<endl<<endl;
         SetConsoleTextAttribute(hConsole, 7 );
         cout<<"Culoarea aleasa: ";in>>obj.culoare;
+        cout<<"Pion ales: ";in>>obj.pion;
         return in;
     }
     friend ostream& operator<<(ostream& out , const Jucator& obj){
@@ -56,7 +86,11 @@ public:
         out<<"Scor: "<<obj.scor<<endl;
         out<<"Culoarea: ";
         SetConsoleTextAttribute(hConsole, obj.culoare);
-        cout<<char(219)<<char(219)<<endl;
+        out<<char(219)<<char(219)<<endl;
+        SetConsoleTextAttribute(hConsole, 7);
+        out<<"Pionul ";
+        SetConsoleTextAttribute(hConsole,obj.culoare);
+        out<<obj.pion<<endl;
         SetConsoleTextAttribute(hConsole, 7);
         return out;
     }
@@ -68,14 +102,14 @@ protected:
     static int incercari;
     string numeJoc;
 public:
-    Joc(){this->numeJoc = "Secret";};
+    Joc(){this->numeJoc = "Secret";}
     Joc(string numeJoc){this->numeJoc = numeJoc;}
     Joc(const Joc& obj){this->numeJoc = obj.numeJoc;}
     Joc& operator=(const Joc& obj){if(this != &obj)this->numeJoc = obj.numeJoc; return *this;}
     Joc& operator--(){incercari = incercari-1; return *this;}
     virtual istream& citire(istream& in){cout<<"Cum se numeste jocul?\n";in>>this->numeJoc;return in;}
     virtual ostream& afisare(ostream& out)const{out<<"Nume joc: "<<this->numeJoc<<endl;out<<"Incercari: "<<this->incercari<<endl;return out;}
-    static int getIncercari(){return incercari;} //const
+    static int getIncercari(){return incercari;}
     string getNumeJoc()const{return this->numeJoc;}
     static void setIncercari(int incercariNoi){incercari = incercariNoi;}
     friend istream& operator>>(istream& in , Joc& obj){return obj.citire(in);}
@@ -85,7 +119,7 @@ public:
 int Joc::incercari = 5;
 
 
-class JocZaruri:public Joc{
+class JocZaruri:virtual public Joc{
 protected:
     int zar1,zar2;
     int nrMaximZar;
@@ -103,14 +137,14 @@ public:
         return *this;
     }
     virtual istream& citire(istream& in){
-        Joc::citire(in);
+        this->Joc::citire(in);
         cout<<"Cat e pe primu zar? "; in>>this->zar1;
         cout<<"Cat e pe al2lea zar? "; in>>this->zar2;
         cout<<"De cat e zaru? "; in>>this->nrMaximZar;
         return in;
     }
-    virtual ostream& operator<<(ostream& out)const{
-        Joc::afisare(out);
+    virtual ostream& afisare(ostream& out)const{
+        this->Joc::afisare(out);
         out<<char(218)<<char(196)<<char(196)<<char(196)<<char(191)<<" "<<char(218)<<char(196)<<char(196)<<char(196)<<char(191)<<endl;
         out<<"|";if(this->zar1 < 10) cout<<" ";
         out<<this->zar1<<" |"<<" ";
@@ -125,13 +159,15 @@ public:
     virtual int getSumaZaruri()const{return(this->zar1+this->zar2);}
 
     virtual void daCuZaru();
-    void afisareZar(const Jucator& obj);
+    void afisare(const Jucator& obj);
+    ///friend istream&
+    ///friend ostream&
 };
 void JocZaruri::daCuZaru(){
     this->zar1 = rand()%this->nrMaximZar +1;
     this->zar2 = rand()%this->nrMaximZar +1;
 }
-void JocZaruri::afisareZar(const Jucator& obj){
+void JocZaruri::afisare(const Jucator& obj){
     HANDLE  hConsole;
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole , obj.getCuloare());
@@ -142,24 +178,27 @@ void JocZaruri::afisareZar(const Jucator& obj){
     cout<<this->zar2<<" |"<<endl;
     cout<<char(192)<<char(196)<<char(196)<<char(196)<<char(217)<<" "<<char(192)<<char(196)<<char(196)<<char(196)<<char(217)<<endl;
     SetConsoleTextAttribute(hConsole , 7);
-
 }
-class JocTabla:public Joc{
+
+
+class JocTabla:virtual public Joc{
 protected:
     int dimGrid;
     char** tabla;
 public:
+    ///friend istream
+    ///friend ostream
     JocTabla();
     JocTabla(string numeJoc,int dimGrid, char** tabla);
     JocTabla(const JocTabla& obj);
     JocTabla& operator=(const JocTabla& obj);
     char** getTabla()const{return this->tabla;}
     void rescaleTabla(int newDim);
-    void afisareTabla(const Jucator& j1,const Jucator& j2);
+    void afisare(const Jucator& j1,const Jucator& j2);
     void puneO();
     void puneX(char chr1,char chr2,char cifra);
     virtual istream& citire(istream& in){
-        Joc::citire(in);
+        this->Joc::citire(in);
         cout<<"Ce dimensiune are ?"<<endl;
         in>>this->dimGrid;
         for(int i = 0 ; i < this->dimGrid ; i++)
@@ -177,15 +216,15 @@ public:
         return in;
     }
     virtual ostream& afisare(ostream& out)const{
-    Joc::afisare(out);
-    out<<"Dimensiunea tablei: "<<this->dimGrid<<endl;
-    out<<"Asa arata tabla"<<endl;
-    for(int i = 0 ; i < this->dimGrid+2 ; i++){
-        for(int j = 0 ; j < this->dimGrid+2 ; j++)
-            out<<this->tabla[i][j]<<" ";
-        out<<endl;
-    }
-    return out;
+        this->Joc::afisare(out);
+        out<<"Dimensiunea tablei: "<<this->dimGrid<<endl;
+        out<<"Asa arata tabla"<<endl;
+        for(int i = 0 ; i < this->dimGrid+2 ; i++){
+            for(int j = 0 ; j < this->dimGrid+2 ; j++)
+                out<<this->tabla[i][j]<<" ";
+            out<<endl;
+        }
+        return out;
     }
     ~JocTabla();
 };
@@ -284,7 +323,7 @@ JocTabla::JocTabla():Joc(){
 
 
 
-void JocTabla::afisareTabla(const Jucator& j1,const Jucator& j2){
+void JocTabla::afisare(const Jucator& j1,const Jucator& j2){
     HANDLE  hConsole;
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     for(int i = 0 ; i < this->dimGrid+2 ; i++){
@@ -329,7 +368,7 @@ void JocTabla::rescaleTabla(int newDim){
         for(int i = 0 ; i < this->dimGrid+2 ; i++)
             if(this->tabla[i] != NULL){
                 delete[] this->tabla[i];
-                this->tabla[i] = NULL;  //?
+                this->tabla[i] = NULL;
             }
         delete[] this->tabla;
         this->tabla = NULL;
@@ -377,11 +416,158 @@ JocTabla::~JocTabla(){
 
 }
 
+
+class JocSmecher:public JocZaruri,public JocTabla{
+private:
+    pair<char,char> spawn;
+    pair<char,char> finish;
+public:
+    ///friend >>
+    ///friend <<
+    JocSmecher(){this->spawn.first = ' ';this->spawn.second = ' ';this->finish.first = ' ';this->finish.second = ' ';}
+    JocSmecher(string numeJoc,int zar1,int zar2,int nrMaximZar,int dimGrid, char** tabla,pair<char,char>spawn,pair<char,char>finish):Joc(numeJoc),JocZaruri(numeJoc,zar1,zar2,nrMaximZar),JocTabla(numeJoc,dimGrid,tabla){
+        this->spawn.first = spawn.first;
+        this->spawn.second = spawn.second;
+        this->finish.first = finish.first;
+        this->finish.second = finish.second;
+    }
+    JocSmecher(const JocSmecher& obj):Joc(obj),JocZaruri(obj),JocTabla(obj){
+        this->spawn.first = obj.spawn.first;
+        this->spawn.second = obj.spawn.second;
+        this->finish.first = obj.finish.first;
+        this->finish.second = obj.finish.second;
+        }
+    JocSmecher& operator=(const JocSmecher& obj){
+        if(this != &obj){
+            JocZaruri::operator=(obj);
+            JocTabla::operator=(obj);
+            this->spawn.first = obj.spawn.first;
+            this->spawn.second = obj.spawn.second;
+            this->finish.first = obj.finish.first;
+            this->finish.second = obj.finish.second;
+        }
+        return *this;
+    }
+    istream& citire(istream& in){
+        Joc::citire(in);
+        cout<<"Ce dimensiune are tabla?"<<endl;
+        in>>this->dimGrid;
+        for(int i = 0 ; i < this->dimGrid ; i++)
+            for(int j = 0 ; j < this->dimGrid ; j++){
+                cout<<"Elementul ["<<i<<"]["<<j<<"]: ";
+                in>>this->tabla[i][j];
+            }
+        for(int i = 0 ; i < this->dimGrid+2 ; i++){
+            this->tabla[i][this->dimGrid+1] = char(97+i);
+            this->tabla[this->dimGrid][i] = char(196);
+            this->tabla[i][this->dimGrid] = char(179);
+            this->tabla[this->dimGrid+1][i] = char(48+i);
+            }
+        this->tabla[this->dimGrid+1][this->dimGrid+1] = char(3);
+
+        cout<<"Cat e pe primu zar? "; in>>this->zar1;
+        cout<<"Cat e pe al2lea zar? "; in>>this->zar2;
+        cout<<"De cat e zaru? "; in>>this->nrMaximZar;
+
+        cout<<"Unde e startu?";in>>this->spawn.first>>this->spawn.second;
+        cout<<"Unde e finishu?";in>>this->finish.first>>this->finish.second;
+        return in;
+    }
+    ostream& afisare(ostream& out)const{
+        Joc::afisare(out);
+        out<<"Dimensiunea tablei: "<<this->dimGrid<<endl;
+        out<<"Asa arata tabla"<<endl;
+        out<<char(218);
+        for(int i = 0 ; i < 2*this->dimGrid+2+2 ; i++) out<<char(196);
+        out<<char(191)<<endl;
+
+        for(int i = 0 ; i < this->dimGrid+2 ; i++){
+            out<<char(179);
+            for(int j = 0 ; j < this->dimGrid+2 ; j++)
+                out<<this->tabla[i][j]<<" ";
+            out<<char(179)<<endl;
+        }
+        out<<char(192);
+        for(int i = 0 ; i < 2*this->dimGrid+2+2 ; i++) out<<char(196);
+        out<<char(217)<<endl;
+
+        out<<char(218)<<char(196)<<char(196)<<char(196)<<char(191)<<" "<<char(218)<<char(196)<<char(196)<<char(196)<<char(191)<<endl;
+        out<<"|";if(this->zar1 < 10) cout<<" ";
+        out<<this->zar1<<" |"<<" ";
+        out<<"|";if(this->zar2 < 10) cout<<" ";
+        out<<this->zar2<<" |"<<endl;;
+        out<<char(192)<<char(196)<<char(196)<<char(196)<<char(217)<<" "<<char(192)<<char(196)<<char(196)<<char(196)<<char(217)<<endl;
+        out<<"Maximu de pe zar e "<<this->nrMaximZar<<endl;
+        return out;
+    }
+    void setSpawn(char linie,char coloana){this->spawn.first = linie; this->spawn.second = coloana;}
+    void setFinish(char linie, char coloana){this->finish.first = linie; this->finish.second = coloana;this->tabla[int(linie)-97][coloana-'0'] ='X';}
+    pair<char,char> getSpawn()const{return spawn;}
+    pair<char,char> getFinish()const{return finish;}
+
+    void afisare(const Jucator& juc1,const Jucator& juc2)const{
+        HANDLE hConsole;
+        hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        int check;
+        cout<<char(218);
+        for(int i = 0 ; i < 2*this->dimGrid+2+2 ; i++) cout<<char(196);
+        cout<<char(191)<<endl;
+
+        for(int i = 0 ; i < this->dimGrid+2 ; i++){
+            cout<<char(179);
+            for(int j = 0 ; j < this->dimGrid+2 ; j++){
+                check = 0;
+                if((i == int(juc1.getPozitie().first)-97) && (j == juc1.getPozitie().second -'0') &&(i == int(juc2.getPozitie().first)-97 )&& (j == juc2.getPozitie().second -'0')){
+                        SetConsoleTextAttribute(hConsole , juc1.getCuloare());
+                        cout<<char(219);
+                        SetConsoleTextAttribute(hConsole , juc2.getCuloare());
+                        cout<<char(219);
+                        SetConsoleTextAttribute(hConsole,7);
+                        check = 1;
+                }else{
+                    if((i == int(juc1.getPozitie().first)-97) && (j == juc1.getPozitie().second -'0') && check == 0){
+                        SetConsoleTextAttribute(hConsole , juc1.getCuloare());
+                        cout<<juc1.getPion()<<" ";
+                        SetConsoleTextAttribute(hConsole , 7);
+                        check = 1;
+                        }
+                    if((i == int(juc2.getPozitie().first)-97) && (j == juc2.getPozitie().second -'0') && check == 0){
+                        SetConsoleTextAttribute(hConsole , juc2.getCuloare());
+                        cout<<juc2.getPion()<<" ";
+                        SetConsoleTextAttribute(hConsole , 7);
+                        check = 1;
+                        }
+                    }
+                    if(check == 0)
+                        cout<<this->tabla[i][j]<<" ";
+                }
+                cout<<char(179)<<endl;
+            }
+        cout<<char(192);
+        for(int i = 0 ; i < 2*this->dimGrid+2+2 ; i++) cout<<char(196);
+        cout<<char(217)<<endl;
+
+    }
+    void obstacole();
+};
+
+void JocSmecher::obstacole(){
+    int aux;
+    for(int i = 0 ; i < this->dimGrid ; i++)
+        for(int j = 0 ; j < this->dimGrid ; j++){
+            aux = rand()%14;
+            if(aux < 3)
+                this->tabla[i][j] = char(254);
+        }
+}
+
+
 class Meniu{
 private:
     Jucator jucator1 , jucator2 ;
     JocZaruri barbut;
     JocTabla tinta;
+    JocSmecher monopoly;
 public:
     Meniu();
     void hr();
@@ -391,14 +577,17 @@ public:
     void jocTinta();
     void instrBarbut();
     void instrTinta();
+    void jocMonopoly();
+    void hrMonopoly();
 };
 
 
 Meniu::Meniu(){
     this->barbut.setNumeJoc("Barbut");
     this->tinta.setNumeJoc("Tinta");
+    this->monopoly.setNumeJoc("Labirint");
 }
-void Meniu::start(){
+void Meniu::start(){/*
     cout<<setw(63)<<"Player1"<<endl<<endl;
     cin>>jucator1;
     system("CLS");
@@ -406,17 +595,18 @@ void Meniu::start(){
     cin>>jucator2;
     system("cls");
     cout<<jucator1<<endl<<jucator2<<endl;
-    system("pause");
+    system("pause");*/
     alegeJoc();
 
 }
 void Meniu::alegeJoc(){
     system("CLS");
     int k;
-    cout<<setw(63)<<"Alegeti joc"<<endl<<endl;
+    cout<<setw(63)<<"Alegeti joc";
+    cout<<endl<<"________________________________________________________________________________________________________________________"<<endl<<endl;
     cout<<"1."<<this->barbut.getNumeJoc()<<endl;
     cout<<"2."<<this->tinta.getNumeJoc()<<endl;
-    cout<<"3.Ceva cu cursa idk -nu e gata"<<endl<<endl;
+    cout<<"3."<<this->monopoly.getNumeJoc()<<endl<<endl;
     cin>>k;
     switch(k){
         case(1):{
@@ -428,8 +618,8 @@ void Meniu::alegeJoc(){
                 break;
             }
         case(3):{
-                ///ultimu joc
-            break;
+                jocMonopoly();
+                break;
         }
     }
 
@@ -449,6 +639,23 @@ void Meniu::hr(){
     cout<<setw(30)<<this->jucator1.getScor()<<setw(60)<<this->jucator2.getScor()<<endl;
     cout<<"Runde ramase: ";for(int i = 0 ; i < barbut.getIncercari() ; i ++) cout<<"|";
     cout<<endl<<"________________________________________________________________________________________________________________________"<<endl<<endl;
+
+}
+void Meniu::hrMonopoly(){
+    HANDLE  hConsole;
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    system("CLS");
+    cout<<setw(58)<<"~~~"<<this->monopoly.getNumeJoc()<<"~~~"<<endl<<endl;
+    cout<<"########################################################################################################################"<<endl;
+    cout<<setw(30)<<"";
+        SetConsoleTextAttribute(hConsole, this->jucator1.getCuloare());
+    cout<<this->jucator1.getNumeJucator();
+        SetConsoleTextAttribute(hConsole,7);
+    cout<<setw(60)<<"";
+        SetConsoleTextAttribute(hConsole, this->jucator2.getCuloare());
+    cout<<this->jucator2.getNumeJucator()<<endl;
+        SetConsoleTextAttribute(hConsole, 7);
+    cout<<setw(30)<<this->jucator1.getPion()<<setw(60)<<this->jucator2.getPion()<<endl;
 
 }
 void Meniu::jocBarbut(){
@@ -475,7 +682,7 @@ void Meniu::jocBarbut(){
         if(ok == 2) break;
         if(ok == 1){
             barbut.daCuZaru();
-            barbut.afisareZar(jucator1);
+            barbut.afisare(jucator1);
             puncte1 = barbut.getSumaZaruri();
         }
         cout<<"Randul lui "<<(this->jucator2).getNumeJucator()<<endl;
@@ -485,7 +692,7 @@ void Meniu::jocBarbut(){
         if(ok == 2) break;
         if(ok == 1){
             barbut.daCuZaru();
-            barbut.afisareZar(jucator2);
+            barbut.afisare(jucator2);
             puncte2 = barbut.getSumaZaruri();
         }
         if(puncte2 > puncte1) ++jucator2;
@@ -531,7 +738,7 @@ void Meniu::jocTinta(){
     system("CLS");
     cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~"<<endl<<endl;
     hr();
-    this->tinta.afisareTabla(this->jucator1,this->jucator2);
+    this->tinta.afisare(this->jucator1,this->jucator2);
     while(Joc::getIncercari() > 0){
         cout<<"Randul lui "<<(this->jucator1).getNumeJucator()<<endl;
         cout<<"   1.Alege un loc"<<endl;
@@ -549,7 +756,7 @@ void Meniu::jocTinta(){
         system("CLS");
         cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~"<<endl<<endl;
         hr();
-        this->tinta.afisareTabla(this->jucator1,this->jucator2);
+        this->tinta.afisare(this->jucator1,this->jucator2);
         cout<<"Randul lui "<<(this->jucator2).getNumeJucator()<<endl;
         cout<<"   1.Alege un loc"<<endl;
         cout<<"   2.Renunta"<<endl;
@@ -566,7 +773,7 @@ void Meniu::jocTinta(){
         cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~"<<endl<<endl;
         --this->tinta;
         hr();
-        this->tinta.afisareTabla(this->jucator1,this->jucator2);
+        this->tinta.afisare(this->jucator1,this->jucator2);
     }
     cout<<"Meci incheiata"<<endl<<endl;
     if(ok == 1){
@@ -587,7 +794,8 @@ void Meniu::jocTinta(){
 
 void Meniu::instrBarbut(){
     system("cls");
-    cout<<"Instructiuni "<<this->barbut.getNumeJoc()<<endl<<endl;
+    cout<<"Instructiuni "<<this->barbut.getNumeJoc()<<endl;
+    cout<<endl<<"________________________________________________________________________________________________________________________"<<endl<<endl;
 
     cout<<"1 -> Jucatorul da cu zarul"<<endl
         <<"2 -> Meciul se incheie"<<endl
@@ -601,8 +809,8 @@ void Meniu::instrBarbut(){
 }
 void Meniu::instrTinta(){
     system("cls");
-    cout<<"Instructiuni "<<this->tinta.getNumeJoc()<<endl<<endl;
-
+    cout<<"Instructiuni "<<this->tinta.getNumeJoc();
+    cout<<endl<<"________________________________________________________________________________________________________________________"<<endl<<endl;
     cout<<"1 -> Jucatorul alege daca joaca"<<endl
         <<"        Alege coordonatele sub forma litera|_|cifra (ex: a 0 , b 2, ...)"<<endl
         <<"2 -> Meciul se incheie"<<endl
@@ -615,11 +823,54 @@ void Meniu::instrTinta(){
     system("pause");
 }
 
+void Meniu::jocMonopoly(){
+    int k;
+    char q,p;
+    system("cls");
+    cout<<"Cat de mare sa fie tabla?\n";cin>>k;
+    this->monopoly.rescaleTabla(int(k));
+    hrMonopoly();
+    this->monopoly.obstacole();
+    this->monopoly.afisare(this->jucator1,this->jucator2);
+    cout<<"Unde e startul?\n";cin>>p>>q;
+    this->monopoly.setSpawn(p,q);
+    cout<<"Unde e finishul?\n";cin>>p>>q;
+    this->monopoly.setFinish(p,q);
+    system("cls");
+    this->jucator1.setPozitie(this->monopoly.getSpawn().first,this->monopoly.getSpawn().second);
+    this->jucator2.setPozitie(this->monopoly.getSpawn().first,this->monopoly.getSpawn().second);
+
+    this->jucator1.setCuloare(11);
+    this->jucator2.setCuloare(14);
+    this->monopoly.afisare(this->jucator1,this->jucator2);
+
+}
+
 int main()
 {srand((unsigned)time(NULL));
 Meniu meniu;
-meniu.start();
+//meniu.start();
+int c = 0;
+    while(1)
+    {
+        c = 0;
 
+        switch((c=getch())) {
+        case 72:
+            cout << endl << "Up" << endl;//key up
+            break;
+        case 80:
+            cout << endl << "Down" << endl;   // key down
+            break;
+        case 75:
+            cout << endl << "Left" << endl;  // key left
+            break;
+        case 77:
+            cout << endl << "Right" << endl;  // key right
+            break;
+        }
+    }
+return 0;
 }
 
 
