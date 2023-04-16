@@ -4,14 +4,6 @@
 #include <ctime>
 #include <conio.h>
 #include <iomanip>
-
-using namespace std;
-#include <iostream>
-#include <windows.h>
-#include <strings.h>
-#include <ctime>
-#include <conio.h>
-#include <iomanip>
 using namespace std;
 
 class IOinterface{
