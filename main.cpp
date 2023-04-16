@@ -420,7 +420,6 @@ JocTabla::~JocTabla(){
         delete[] this->tabla;
         this->tabla = NULL;
         }
-    cout<<"cox";
 }
 
 
