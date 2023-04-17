@@ -113,6 +113,7 @@ public:
     friend istream& operator>>(istream& in , Joc& obj){return obj.citire(in);}
     friend ostream& operator<<(ostream& out , const Joc& obj){return obj.afisare(out);}
     void setNumeJoc(string numeJoc){this->numeJoc = numeJoc;}
+    virtual ~Joc(){};
 };
 int Joc::incercari = 5;
 
@@ -160,6 +161,7 @@ public:
     void afisare(const Jucator& obj);
     friend istream& operator>>(istream& in , JocZaruri& obj){return obj.citire(in);}
     friend ostream& operator<<(ostream& out , const JocZaruri& obj){return obj.afisare(out);}
+    virtual ~JocZaruri(){};
 };
 void JocZaruri::daCuZaru(){
     this->zar1 = rand()%this->nrMaximZar +1;
@@ -225,7 +227,7 @@ public:
     }
     friend istream& operator>>(istream& in,JocTabla& obj){return obj.citire(in);}
     friend ostream& operator<<(ostream& out , const JocTabla& obj){return obj.afisare(out);}
-    ~JocTabla();
+    virtual ~JocTabla();
 };
 
 JocTabla::JocTabla(string numeJoc,int dimGrid , char** tabla){
@@ -550,6 +552,7 @@ public:
 
     }
     void obstacole();
+    virtual ~JocSmecher(){};
 };
 
 void JocSmecher::obstacole(){
