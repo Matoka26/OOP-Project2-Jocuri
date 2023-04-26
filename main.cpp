@@ -4,6 +4,7 @@
 #include <ctime>
 #include <conio.h>
 #include <iomanip>
+#include <vector>
 using namespace std;
 
 class IOinterface{
@@ -38,12 +39,14 @@ public:
         this->pozitie.second = obj.pozitie.second;
         }
     Jucator& operator=(const Jucator& obj){
-        this->numeJucator = obj.numeJucator;
-        this->scor = obj.scor;
-        this->culoare = obj.culoare;
-        this->pion = obj.pion;
-        this->pozitie.first = obj.pozitie.first;
-        this->pozitie.second = obj.pozitie.second;
+        if(this!= &obj){
+            this->numeJucator = obj.numeJucator;
+            this->scor = obj.scor;
+            this->culoare = obj.culoare;
+            this->pion = obj.pion;
+            this->pozitie.first = obj.pozitie.first;
+            this->pozitie.second = obj.pozitie.second;
+        }
         return *this;
         }
     void setPozitie(char linie,char coloana){this->pozitie.first = linie;this->pozitie.second = coloana;}
@@ -108,7 +111,7 @@ public:
     virtual istream& citire(istream& in){cout<<"Cum se numeste jocul?\n";in>>this->numeJoc;return in;}
     virtual ostream& afisare(ostream& out)const{out<<"Nume joc: "<<this->numeJoc<<endl;out<<"Incercari: "<<this->incercari<<endl;return out;}
     static int getIncercari(){return incercari;}
-    string getNumeJoc()const{return this->numeJoc;}
+    virtual string getNumeJoc()const = 0;
     static void setIncercari(int incercariNoi){incercari = incercariNoi;}
     friend istream& operator>>(istream& in , Joc& obj){return obj.citire(in);}
     friend ostream& operator<<(ostream& out , const Joc& obj){return obj.afisare(out);}
@@ -159,6 +162,7 @@ public:
 
     virtual void daCuZaru();
     void afisare(const Jucator& obj);
+    string getNumeJoc()const{return this->numeJoc;}
     friend istream& operator>>(istream& in , JocZaruri& obj){return obj.citire(in);}
     friend ostream& operator<<(ostream& out , const JocZaruri& obj){return obj.afisare(out);}
     virtual ~JocZaruri(){};
@@ -192,6 +196,7 @@ public:
     JocTabla& operator=(const JocTabla& obj);
     char** getTabla()const{return this->tabla;}
     int getDimGrid()const{return this->dimGrid;}
+    string getNumeJoc()const{return this->numeJoc;}
     void rescaleTabla(int newDim);
     void afisare(const Jucator& j1,const Jucator& j2);
     void puneO();
@@ -501,6 +506,7 @@ public:
 
         return out;
     }
+    string getNumeJoc()const{return this->numeJoc;}
     friend istream& operator>>(istream& in,JocSmecher& obj){return obj.citire(in);}
     friend ostream& operator<<(ostream& out,const JocSmecher& obj){return obj.afisare(out);}
     void setSpawn(char linie,char coloana){this->spawn.first = linie; this->spawn.second = coloana;}
@@ -569,9 +575,10 @@ void JocSmecher::obstacole(){
 class Meniu{
 private:
     Jucator jucator1 , jucator2 ;
-    JocZaruri barbut;
-    JocTabla tinta;
-    JocSmecher monopoly;
+    vector<Joc*> jocuri;
+    //JocZaruri barbut;
+    //JocTabla tinta;
+    //JocSmecher monopoly;
 public:
     Meniu();
     void hr();
@@ -589,9 +596,12 @@ public:
 
 
 Meniu::Meniu(){
-    this->barbut.setNumeJoc("Barbut");
-    this->tinta.setNumeJoc("Tinta");
-    this->monopoly.setNumeJoc("Labirint");
+    jocuri.push_back(new JocZaruri());
+    jocuri.push_back(new JocTabla());
+    jocuri.push_back(new JocSmecher());
+    this->jocuri[0]->setNumeJoc("Barbut");
+    this->jocuri[1]->setNumeJoc("Tinta");
+    this->jocuri[2]->setNumeJoc("Labirint");
 }
 void Meniu::start(){
     cout<<setw(63)<<"Player1\n\n";
@@ -610,9 +620,9 @@ void Meniu::alegeJoc(){
     int k;
     cout<<setw(63)<<"Alegeti joc";
     cout<<"\n________________________________________________________________________________________________________________________\n\n";
-    cout<<"1."<<this->barbut.getNumeJoc()<<endl;
-    cout<<"2."<<this->tinta.getNumeJoc()<<endl;
-    cout<<"3."<<this->monopoly.getNumeJoc()<<endl<<endl;
+    cout<<"1."<<this->jocuri[0]->getNumeJoc()<<endl;
+    cout<<"2."<<this->jocuri[1]->getNumeJoc()<<endl;
+    cout<<"3."<<this->jocuri[2]->getNumeJoc()<<endl<<endl;
     cin>>k;
     switch(k){
         case(1):{
@@ -643,7 +653,7 @@ void Meniu::hr(){
     cout<<this->jucator2.getNumeJucator()<<endl;
         SetConsoleTextAttribute(hConsole, 7);
     cout<<setw(30)<<this->jucator1.getScor()<<setw(60)<<this->jucator2.getScor()<<endl;
-    cout<<"Runde ramase: ";for(int i = 0 ; i < barbut.getIncercari() ; i ++) cout<<"|";
+    cout<<"Runde ramase: ";for(int i = 0 ; i < this->jocuri[0]->getIncercari() ; i ++) cout<<"|";
     cout<<"\n________________________________________________________________________________________________________________________\n\n";
 
 }
@@ -651,7 +661,7 @@ void Meniu::hrMonopoly(){
     HANDLE  hConsole;
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     system("CLS");
-    cout<<setw(58)<<"~~~"<<this->monopoly.getNumeJoc()<<"~~~\n\n";
+    cout<<setw(58)<<"~~~"<<this->jocuri[0]->getNumeJoc()<<"~~~\n\n";
     cout<<"########################################################################################################################\n";
     cout<<setw(30)<<"";
         SetConsoleTextAttribute(hConsole, this->jucator1.getCuloare());
@@ -666,18 +676,19 @@ void Meniu::hrMonopoly(){
 }
 void Meniu::jocBarbut(){
     int k;
+    JocZaruri* barbut = dynamic_cast<JocZaruri*>(this->jocuri[0]);
     instrBarbut();
     system("cls");
     this->jucator1.setScor(0);
     this->jucator2.setScor(0);
     cout<<"Cate fete are zarul?\n";
     cin>>k;
-    this->barbut.setNrMaximZar(k);
+    barbut->setNrMaximZar(k);
     cout<<"Cate ture sa aveti?\n";
     cin>>k;
     Joc::setIncercari(k);
     system("CLS");
-    cout<<setw(58)<<"~~~"<<this->barbut.getNumeJoc()<<"~~~\n\n";
+    cout<<setw(58)<<"~~~"<<barbut->getNumeJoc()<<"~~~\n\n";
     hr();
     int ok = 0,puncte1,puncte2;
     while(Joc::getIncercari() > 0){
@@ -687,9 +698,9 @@ void Meniu::jocBarbut(){
         cin>>ok;
         if(ok == 2) break;
         if(ok == 1){
-            barbut.daCuZaru();
-            barbut.afisare(jucator1);
-            puncte1 = barbut.getSumaZaruri();
+            barbut->daCuZaru();
+            barbut->afisare(jucator1);
+            puncte1 = barbut->getSumaZaruri();
         }
         cout<<"Randul lui "<<(this->jucator2).getNumeJucator()<<endl;
         cout<<"   1.Da cu zaru\n";
@@ -697,16 +708,16 @@ void Meniu::jocBarbut(){
         cin>>ok;
         if(ok == 2) break;
         if(ok == 1){
-            barbut.daCuZaru();
-            barbut.afisare(jucator2);
-            puncte2 = barbut.getSumaZaruri();
+            barbut->daCuZaru();
+            barbut->afisare(jucator2);
+            puncte2 = barbut->getSumaZaruri();
         }
         if(puncte2 > puncte1) ++jucator2;
         if(puncte1 > puncte2) ++jucator1;
         system("pause");
         system("cls");
-        --this->barbut;
-        cout<<setw(58)<<"~~~"<<this->barbut.getNumeJoc()<<"~~~\n\n";
+        --(*barbut);
+        cout<<setw(58)<<"~~~"<<barbut->getNumeJoc()<<"~~~\n\n";
         hr();
     }
     cout<<"Meci incheiata\n\n";
@@ -727,6 +738,7 @@ void Meniu::jocBarbut(){
 
 }
 void Meniu::jocTinta(){
+    JocTabla* tinta = dynamic_cast<JocTabla*>(this->jocuri[1]);
     int k;
     instrTinta();
     system("cls");
@@ -734,17 +746,17 @@ void Meniu::jocTinta(){
     this->jucator2.setScor(0);
     cout<<"Cate casute are latura tablei?\n";
     cin>>k;
-    this->tinta.rescaleTabla(k);
-    this->tinta.puneO();
+    tinta->rescaleTabla(k);
+    tinta->puneO();
     cout<<"Cate ture sa aveti?\n";
     cin>>k;
     Joc::setIncercari(k);
     int ok = 0;
     char coordX,coordY;
     system("CLS");
-    cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~\n\n";
+    cout<<setw(58)<<"~~~"<<tinta->getNumeJoc()<<"~~~\n\n";
     hr();
-    this->tinta.afisare(this->jucator1,this->jucator2);
+    tinta->afisare(this->jucator1,this->jucator2);
     while(Joc::getIncercari() > 0){
         cout<<"Randul lui "<<(this->jucator1).getNumeJucator()<<endl;
         cout<<"   1.Alege un loc\n";
@@ -754,15 +766,15 @@ void Meniu::jocTinta(){
         if(ok == 1){
             cout<<"Ce coordonate?(format:litera cifra)\n";
             cin>>coordX>>coordY;
-            if(this->tinta.getTabla()[int(coordX)-97][int(coordY)-48] == 'O')
+            if(tinta->getTabla()[int(coordX)-97][int(coordY)-48] == 'O')
                 ++this->jucator1;
-            this->tinta.puneX(coordX,coordY,'1');
+            tinta->puneX(coordX,coordY,'1');
         }
 
         system("CLS");
-        cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~\n\n";
+        cout<<setw(58)<<"~~~"<<tinta->getNumeJoc()<<"~~~\n\n";
         hr();
-        this->tinta.afisare(this->jucator1,this->jucator2);
+        tinta->afisare(this->jucator1,this->jucator2);
         cout<<"Randul lui "<<(this->jucator2).getNumeJucator()<<endl;
         cout<<"   1.Alege un loc\n";
         cout<<"   2.Renunta\n";
@@ -771,15 +783,15 @@ void Meniu::jocTinta(){
         if(ok == 1){
             cout<<"Ce coordonate?(format:litera cifra)\n";
             cin>>coordX>>coordY;
-            if((this->tinta).getTabla()[int(coordX)-97][int(coordY)-48] == 'O')
+            if(tinta->getTabla()[int(coordX)-97][int(coordY)-48] == 'O')
                 ++this->jucator2;
-            this->tinta.puneX(coordX,coordY,'2');
+            tinta->puneX(coordX,coordY,'2');
         }
         system("CLS");
-        cout<<setw(58)<<"~~~"<<this->tinta.getNumeJoc()<<"~~~\n\n";
-        --this->tinta;
+        cout<<setw(58)<<"~~~"<<tinta->getNumeJoc()<<"~~~\n\n";
+        --(*tinta);
         hr();
-        this->tinta.afisare(this->jucator1,this->jucator2);
+        tinta->afisare(this->jucator1,this->jucator2);
     }
     cout<<"Meci incheiata"<<endl<<endl;
     if(ok == 1){
@@ -800,7 +812,7 @@ void Meniu::jocTinta(){
 
 void Meniu::instrBarbut(){
     system("cls");
-    cout<<"Instructiuni "<<this->barbut.getNumeJoc()<<endl;
+    cout<<"Instructiuni "<<this->jocuri[0]->getNumeJoc()<<endl;
     cout<<"\n________________________________________________________________________________________________________________________\n\n";
 
     cout<<"1 -> Jucatorul da cu zarul\n"
@@ -813,7 +825,7 @@ void Meniu::instrBarbut(){
 }
 void Meniu::instrTinta(){
     system("cls");
-    cout<<"Instructiuni "<<this->tinta.getNumeJoc();
+    cout<<"Instructiuni "<<this->jocuri[1]->getNumeJoc();
     cout<<"\n________________________________________________________________________________________________________________________\n\n";
     cout<<"1 -> Jucatorul alege daca joaca\n"
         <<"        Alege coordonatele sub forma litera|_|cifra (ex: a 0 , b 2, ...)\n"
@@ -827,7 +839,7 @@ void Meniu::instrTinta(){
 
 void Meniu::instrLabirint(){
     system("cls");
-    cout<<"Instructiuni "<<this->monopoly.getNumeJoc();
+    cout<<"Instructiuni "<<this->jocuri[2]->getNumeJoc();
     cout<<"\n________________________________________________________________________________________________________________________\n\n";
     cout<<"Fiecare jucator controleaza din SAGETI un pion si trebuie sa ajunga la X evitand obstacolele\n"
         <<"Fiecare are dreptul la un numar de mutari egal cu suma de pe zaruri dupa ce da cu ele\n\n";
@@ -835,6 +847,7 @@ void Meniu::instrLabirint(){
 }
 
 void Meniu::runda(Jucator& juc){
+    JocSmecher* monopoly = dynamic_cast<JocSmecher*>(this->jocuri[2]);
     int k,mutari;
     cout<<"\nRandul lui "<<juc.getNumeJucator()<<endl;
     cout<<"   1.Da cu zaru\n   2.Renunta\n";
@@ -845,51 +858,51 @@ void Meniu::runda(Jucator& juc){
         }
     if(k == 1){
         hrMonopoly();
-        this->monopoly.afisare(this->jucator1,this->jucator2);
-        this->monopoly.daCuZaru();
-        JocZaruri(this->monopoly).afisare(juc);
-        mutari = monopoly.getSumaZaruri();
+        monopoly->afisare(this->jucator1,this->jucator2);
+        monopoly->daCuZaru();
+        JocZaruri(*monopoly).afisare(juc);
+        mutari = monopoly->getSumaZaruri();
         for(int i = 0 ; i < mutari ; i++){
             int c = getch();
             int check = 0;
             if(c == 72)
-                if(juc.getPozitie().first > 'a' && this->monopoly.getTabla()[int(juc.getPozitie().first)-98][int(juc.getPozitie().second)-48] != char(254)){
+                if(juc.getPozitie().first > 'a' && monopoly->getTabla()[int(juc.getPozitie().first)-98][int(juc.getPozitie().second)-48] != char(254)){
                     juc.setPozitie(juc.getPozitie().first-1,juc.getPozitie().second);
                     hrMonopoly();
-                    this->monopoly.afisare(this->jucator1,this->jucator2);
-                    JocZaruri(this->monopoly).afisare(juc);
-                    cout<<"Miscari ramase:"<<this->monopoly.getSumaZaruri()-i-1<<endl;
+                    monopoly->afisare(this->jucator1,this->jucator2);
+                    JocZaruri(*monopoly).afisare(juc);
+                    cout<<"Miscari ramase:"<<monopoly->getSumaZaruri()-i-1<<endl;
                     check = 1;
                 }
             if(c == 80)
-                if(juc.getPozitie().first < char(this->monopoly.getDimGrid()+96) && this->monopoly.getTabla()[int(juc.getPozitie().first)-96][int(juc.getPozitie().second)-48] != char(254)){
+                if(juc.getPozitie().first < char(monopoly->getDimGrid()+96) && monopoly->getTabla()[int(juc.getPozitie().first)-96][int(juc.getPozitie().second)-48] != char(254)){
                     juc.setPozitie(juc.getPozitie().first+1,juc.getPozitie().second);
                     hrMonopoly();
-                    this->monopoly.afisare(this->jucator1,this->jucator2);
-                    JocZaruri(this->monopoly).afisare(juc);
-                    cout<<"Miscari ramase:"<<this->monopoly.getSumaZaruri()-i-1<<endl;
+                    monopoly->afisare(this->jucator1,this->jucator2);
+                    JocZaruri(*monopoly).afisare(juc);
+                    cout<<"Miscari ramase:"<<monopoly->getSumaZaruri()-i-1<<endl;
                     check = 1;
                 }
             if(c == 75)
-                if(juc.getPozitie().second > '0' && this->monopoly.getTabla()[int(juc.getPozitie().first)-97][int(juc.getPozitie().second)-49] != char(254)){
+                if(juc.getPozitie().second > '0' && monopoly->getTabla()[int(juc.getPozitie().first)-97][int(juc.getPozitie().second)-49] != char(254)){
                     juc.setPozitie(juc.getPozitie().first,juc.getPozitie().second-1);
                     hrMonopoly();
-                    this->monopoly.afisare(this->jucator1,this->jucator2);
-                    JocZaruri(this->monopoly).afisare(juc);
-                    cout<<"Miscari ramase:"<<this->monopoly.getSumaZaruri()-i-1<<endl;
+                    monopoly->afisare(this->jucator1,this->jucator2);
+                    JocZaruri(*monopoly).afisare(juc);
+                    cout<<"Miscari ramase:"<<monopoly->getSumaZaruri()-i-1<<endl;
                     check = 1;
                 }
             if(c == 77)
-                if(juc.getPozitie().second < char(this->monopoly.getDimGrid()+47) && this->monopoly.getTabla()[int(juc.getPozitie().first)-97][int(juc.getPozitie().second)-47] != char(254)){
+                if(juc.getPozitie().second < char(monopoly->getDimGrid()+47) && monopoly->getTabla()[int(juc.getPozitie().first)-97][int(juc.getPozitie().second)-47] != char(254)){
                     juc.setPozitie(juc.getPozitie().first,juc.getPozitie().second+1);
                     hrMonopoly();
-                    this->monopoly.afisare(this->jucator1,this->jucator2);
-                    JocZaruri(this->monopoly).afisare(juc);
-                    cout<<"Miscari ramase:"<<this->monopoly.getSumaZaruri()-i-1<<endl;
+                    monopoly->afisare(this->jucator1,this->jucator2);
+                    JocZaruri(*monopoly).afisare(juc);
+                    cout<<"Miscari ramase:"<<monopoly->getSumaZaruri()-i-1<<endl;
                     check = 1;
                 }
             if(check == 0 ) i--;
-            if(juc.getPozitie() == this->monopoly.getFinish())
+            if(juc.getPozitie() == monopoly->getFinish())
                 return;
         }
     }
@@ -897,32 +910,33 @@ void Meniu::runda(Jucator& juc){
 }
 
 void Meniu::jocMonopoly(){
+    JocSmecher* monopoly = dynamic_cast<JocSmecher*>(this->jocuri[2]);
     instrLabirint();
     int k;
     char q,p;
     system("cls");
     cout<<"Cat de mare sa fie tabla?\n";cin>>k;
-    this->monopoly.rescaleTabla(int(k));
+    monopoly->rescaleTabla(int(k));
     hrMonopoly();
-    this->monopoly.obstacole();
-    this->monopoly.afisare(this->jucator1,this->jucator2);
+    monopoly->obstacole();
+    monopoly->afisare(this->jucator1,this->jucator2);
     cout<<"Unde e startul?\n";cin>>p>>q;
-    this->monopoly.setSpawn(p,q);
+    monopoly->setSpawn(p,q);
     cout<<"Unde e finishul?\n";cin>>p>>q;
-    this->monopoly.setFinish(p,q);
+    monopoly->setFinish(p,q);
     system("cls");
-    this->jucator1.setPozitie(this->monopoly.getSpawn().first,this->monopoly.getSpawn().second);
-    this->jucator2.setPozitie(this->monopoly.getSpawn().first,this->monopoly.getSpawn().second);
+    this->jucator1.setPozitie(monopoly->getSpawn().first,monopoly->getSpawn().second);
+    this->jucator2.setPozitie(monopoly->getSpawn().first,monopoly->getSpawn().second);
     hrMonopoly();
-    this->monopoly.afisare(this->jucator1,this->jucator2);
+    monopoly->afisare(this->jucator1,this->jucator2);
     while(1){
         runda(this->jucator1);
-        if(this->jucator1.getPozitie() == this->monopoly.getFinish()){
+        if(this->jucator1.getPozitie() == monopoly->getFinish()){
             cout<<jucator1.getNumeJucator()<<" a castigat!\n";
             break;
         }
         runda(this->jucator2);
-        if(this->jucator2.getPozitie() == this->monopoly.getFinish()){
+        if(this->jucator2.getPozitie() == monopoly->getFinish()){
             cout<<jucator2.getNumeJucator()<<" a castigat!\n";
             break;
         }
